@@ -1,0 +1,73 @@
+MTN MoMo Payment Gateway Changelog
+====================================
+
+Version 1.0.0 - 2026-05-05
+---------------------------
+Initial Release
+
+### Features Added:
+- Complete MTN MoMo payment gateway integration for PHPNuxBill
+- South Sudan SSP currency support (£ symbol)
+- Sandbox/Live/Offline payment modes
+- Modern glassmorphism payment interface
+- Mobile-responsive design with dark mode support
+- Real-time payment processing with AJAX
+- Admin dashboard widget with analytics
+- Transaction management and export functionality
+- Webhook handling for payment notifications
+- SMS and email notification support
+- Test mode with predefined test numbers
+- Comprehensive error handling and validation
+- Phone number validation for South Sudan (+211 format)
+- Automatic database table creation
+- Security features (CSRF, XSS, SQL injection protection)
+- Logging system for debugging and monitoring
+
+### Technical Details:
+- PHP 7.4 - 8.2 compatible
+- PDO database integration
+- RESTful API handlers
+- HMAC signature verification for webhooks
+- CSV export functionality
+- Modular file structure following PHPNuxBill standards
+
+### Test Numbers:
+- 912345678 - Successful payment
+- 923456789 - Failed payment
+- 934567890 - Pending payment
+- Test PIN: 12345
+
+### Installation:
+- Copy files to paymentgateway/ directory
+- Run CLI installer: php payment.php install
+- Configure settings in admin panel
+- Set proper file permissions (644 for PHP files)
+
+### Known Issues:
+- None reported in this version
+
+### Dependencies:
+- PHP 7.4+ with PDO MySQL extension
+- PHPNuxBill hotspot billing system
+- cURL extension for API calls
+- JSON extension
+
+### Security:
+- All inputs validated and sanitized
+- SQL injection protection with prepared statements
+- XSS prevention with output encoding
+- CSRF protection implementation
+- Webhook signature verification
+
+### Performance:
+- Optimized database queries with indexes
+- Efficient API timeout handling
+- Minimal resource usage
+- Fast loading payment interface
+
+### Future Roadmap:
+- Multi-currency support
+- Advanced analytics dashboard
+- Mobile app integration
+- QR code payment support
+- Recurring payment options

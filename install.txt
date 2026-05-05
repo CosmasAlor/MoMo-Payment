@@ -1,0 +1,191 @@
+MTN MoMo Payment Gateway Installation Guide
+==========================================
+
+System Requirements
+-------------------
+- PHPNuxBill hotspot billing system
+- PHP 7.4 or higher (recommended 8.0+)
+- MySQL/MariaDB database
+- PDO MySQL extension
+- cURL extension
+- JSON extension
+- File write permissions for logs
+
+Installation Steps
+------------------
+
+1. BACKUP YOUR SYSTEM
+   Before installing, create a full backup of your PHPNuxBill installation and database.
+
+2. UPLOAD FILES
+   Copy the entire paymentgateway directory to your PHPNuxBill installation:
+   
+   ```
+   paymentgateway/
+   ├── payment.php
+   └── ui/
+       └── payment.tpl
+   ```
+   
+   Upload to: /path/to/phpnuxbill/paymentgateway/
+
+3. SET FILE PERMISSIONS
+   Ensure proper file permissions:
+   
+   ```bash
+   chmod 644 paymentgateway/payment.php
+   chmod 644 paymentgateway/ui/payment.tpl
+   chmod 755 paymentgateway/
+   chmod 755 paymentgateway/ui/
+   ```
+
+4. RUN INSTALLER
+   Execute the CLI installer to create database tables:
+   
+   ```bash
+   cd /path/to/phpnuxbill/paymentgateway/
+   php payment.php install
+   ```
+   
+   You should see:
+   ```
+   Installing MTN MoMo Payment Gateway...
+   Database tables created successfully!
+   Installation complete!
+   ```
+
+5. CONFIGURE GATEWAY
+   - Log into your PHPNuxBill admin panel
+   - Navigate to: Settings → Payment Gateways
+   - Enable "MTN MoMo (SSP)" gateway
+   - Click "Settings" to configure:
+
+   Configuration Options:
+   - Mode: sandbox (testing), live (production), or offline
+   - API Key: Your MTN MoMo API key
+   - API Secret: Your MTN MoMo API secret
+   - Admin Email: Email for notifications
+   - Enable SMS: Toggle SMS notifications
+
+6. TEST IN SANDBOX MODE
+   Before going live, test with sandbox mode:
+   
+   Test Phone Numbers:
+   - 912345678 → Success
+   - 923456789 → Failed
+   - 934567890 → Pending
+   
+   Test PIN: 12345
+
+7. WEBHOOK CONFIGURATION
+   Set up webhook URL in your MTN MoMo dashboard:
+   ```
+   https://yourdomain.com/?_route=momo_webhook
+   ```
+
+8. GO LIVE
+   Once testing is complete:
+   - Change mode from "sandbox" to "live"
+   - Update API credentials with production keys
+   - Test with real transactions (small amounts first)
+
+Directory Structure After Installation
+---------------------------------------
+```
+phpnuxbill/
+├── paymentgateway/
+│   ├── payment.php          # Main gateway logic
+│   ├── ui/
+│   │   └── payment.tpl      # Payment interface
+│   └── momo.log            # Log file (auto-created)
+```
+
+Database Tables Created
+-----------------------
+- tbl_momo_payments - Payment transactions
+- tbl_momo_webhooks - Webhook notifications
+- tbl_momo_analytics - Payment analytics
+
+Configuration File Locations
+-----------------------------
+- Gateway settings: PHPNuxBill admin panel
+- Log file: paymentgateway/momo.log
+- Database: Your PHPNuxBill database
+
+Troubleshooting
+---------------
+
+Common Issues:
+
+1. "Database Error" 
+   - Check database credentials in config.php
+   - Ensure PDO MySQL extension is installed
+   - Verify database user has CREATE TABLE permissions
+
+2. "Payment Failed"
+   - Verify API credentials are correct
+   - Check if server IP is whitelisted with MTN
+   - Test with sandbox mode first
+
+3. "Permission Denied"
+   - Check file permissions (644 for PHP files)
+   - Ensure web server can write log files
+
+4. "Webhook Not Working"
+   - Verify webhook URL is accessible
+   - Check firewall settings
+   - Ensure SSL certificate is valid for production
+
+5. "Blank Payment Page"
+   - Check PHP error logs
+   - Verify all files uploaded correctly
+   - Ensure PHP version compatibility
+
+Debug Mode
+----------
+Enable debug logging by checking the momo.log file:
+```bash
+tail -f paymentgateway/momo.log
+```
+
+Security Notes
+--------------
+- Change webhook secret key in payment.php
+- Use HTTPS in production
+- Regularly update API credentials
+- Monitor transaction logs
+- Implement rate limiting if needed
+
+Performance Optimization
+------------------------
+- Enable database query caching
+- Use CDN for static assets
+- Optimize MySQL indexes
+- Monitor server resources
+
+Support
+-------
+For support and updates:
+- Check changelog.txt for version updates
+- Review log files for error details
+- Contact your PHPNuxBill provider
+- MTN MoMo business support for API issues
+
+Uninstallation
+---------------
+To remove the gateway:
+1. Disable in PHPNuxBill admin panel
+2. Remove paymentgateway directory
+3. Optionally drop database tables:
+   ```sql
+   DROP TABLE tbl_momo_payments;
+   DROP TABLE tbl_momo_webhooks;
+   DROP TABLE tbl_momo_analytics;
+   ```
+
+Version History
+---------------
+See changelog.txt for detailed version history and updates.
+
+Last Updated: 2026-05-05
+Version: 1.0.0

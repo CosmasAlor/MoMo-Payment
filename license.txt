@@ -1,0 +1,89 @@
+MIT License
+
+Copyright (c) 2026 PHPNuxBill Community
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+MTN MoMo Payment Gateway License Agreement
+==========================================
+
+This license applies to the MTN MoMo Payment Gateway plugin for PHPNuxBill
+hotspot billing system.
+
+1. USAGE RIGHTS
+   - You may use this software for commercial and non-commercial purposes
+   - You may modify the source code to suit your needs
+   - You may distribute modified versions under the same license
+
+2. ATTRIBUTION
+   - You must keep the original copyright notice intact
+   - You must include the license in any distribution
+   - You may not claim authorship of the original work
+
+3. DISCLAIMER
+   - This software is provided "as is" without warranty
+   - Authors are not liable for any damages arising from use
+   - Use at your own risk, especially with financial transactions
+
+4. MTN MOMo INTEGRATION
+   - This plugin integrates with MTN Mobile Money services
+   - You must comply with MTN's terms of service
+   - API keys and credentials must be obtained from MTN
+   - Plugin author is not affiliated with MTN
+
+5. PHPNUXBILL COMPATIBILITY
+   - This plugin is designed for PHPNuxBill billing system
+   - Compatibility with other systems is not guaranteed
+   - PHPNuxBill license terms may apply separately
+
+6. SOUTH SUDAN SPECIFIC
+   - This version is specifically configured for South Sudan
+   - Currency: South Sudanese Pound (SSP)
+   - Phone format: +211 9XX XXX XXX
+   - Modifications may be needed for other countries
+
+7. SECURITY CONSIDERATIONS
+   - Financial transactions require proper security measures
+   - Ensure HTTPS in production environments
+   - Regular security audits recommended
+   - Keep API credentials secure
+
+8. SUPPORT AND UPDATES
+   - Community support through PHPNuxBill forums
+   - Updates may be released to fix security issues
+   - No guaranteed support timeline
+   - Professional support may be available separately
+
+9. THIRD-PARTY COMPONENTS
+   - This software may include third-party libraries
+   - Each component has its own license terms
+   - All included licenses are compatible with MIT
+
+10. COMPLIANCE
+    - You must comply with all applicable laws and regulations
+    - Financial regulations in your jurisdiction
+    - Data protection and privacy laws
+    - Anti-money laundering requirements
+
+For questions about this license, contact the PHPNuxBill community.
+
+License Version: 1.0
+Date: 2026-05-05
