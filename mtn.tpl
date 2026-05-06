@@ -144,13 +144,13 @@ function testConnection() {
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Testing...';
     btn.disabled = true;
     
-    fetch('{$_url}order/test_mtn_connection', {
+    fetch('system/paymentgateway/mtn_connection_test.php', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
+        body: new URLSearchParams({
+            test_mtn_connection: '1',
             api_user_id: document.getElementById('mtn_api_user_id').value,
             collection_subscription_key: document.getElementById('mtn_collection_subscription_key').value,
             environment: document.getElementById('mtn_environment').value
