@@ -412,6 +412,60 @@ function mtn_payment_page() {
 }
 
 // ============================================
+// ADMIN MENU
+// ============================================
+function mtn_admin_menu() {
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>MTN MoMo Gateway</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container" style="margin-top: 50px;">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading text-center">
+                            <h3><i class="fa fa-money"></i> MTN MoMo Payment Gateway</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="list-group">
+                                <a href="?_route=mtn_config" class="list-group-item">
+                                    <i class="fa fa-cog"></i> Configuration Settings
+                                    <span class="pull-right"><i class="fa fa-chevron-right"></i></span>
+                                </a>
+                                <a href="?_route=mtn_pay&invoice=12345&amount=100" class="list-group-item">
+                                    <i class="fa fa-credit-card"></i> Test Payment
+                                    <span class="pull-right"><i class="fa fa-chevron-right"></i></span>
+                                </a>
+                                <a href="?_route=mtn_callback&invoice=12345&status=success" class="list-group-item">
+                                    <i class="fa fa-exchange"></i> Test Callback
+                                    <span class="pull-right"><i class="fa fa-chevron-right"></i></span>
+                                </a>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <h4>Available Routes:</h4>
+                                <ul>
+                                    <li><strong>Config:</strong> ?_route=mtn_config</li>
+                                    <li><strong>Payment:</strong> ?_route=mtn_pay&invoice=XXX&amount=XXX</li>
+                                    <li><strong>Callback:</strong> ?_route=mtn_callback&invoice=XXX&status=XXX</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    <?php
+}
+
+// ============================================
 // CALLBACK HANDLER
 // ============================================
 function mtn_callback() {
@@ -510,6 +564,11 @@ if (strpos($route, '/') !== false) {
 if (empty($route)) {
     echo '<div class="alert alert-info">Debug: No route parameter found. Current URL: ' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</div>';
     echo '<div class="alert alert-info">Debug: GET parameters: ' . htmlspecialchars(print_r($_GET, true)) . '</div>';
+}
+
+if ($action == "mtn") {
+    mtn_admin_menu();
+    exit;
 }
 
 if ($action == "mtn_config") {
