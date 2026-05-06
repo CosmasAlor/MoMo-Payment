@@ -745,7 +745,12 @@ function momo_payment_interface() {
         }
         
         // Load template
-        include __DIR__ . '/ui/payment.tpl';
+        $template_file = __DIR__ . '/ui/payment.tpl';
+        if (file_exists($template_file)) {
+            include $template_file;
+        } else {
+            die('Template file not found: ' . basename($template_file));
+        }
         
     } catch (Exception $e) {
         die('Error loading payment: ' . $e->getMessage());
