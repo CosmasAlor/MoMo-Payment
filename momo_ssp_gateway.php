@@ -132,21 +132,94 @@ $momo_db = new MoMoDatabase();
 // ============================================
 // PART 3: GATEWAY REGISTRATION
 // ============================================
-function momo_config($gateway) {
-    global $momo_config;
-    return [
-        'name' => 'MTN MoMo (SSP)',
-        'version' => '1.0',
-        'currency' => $momo_config['currency'],
-        'symbol' => $momo_config['currency_symbol'],
-        'mode' => $momo_config['mode'],
-        'config_url' => '?_route=momo_admin',
-        'callback_url' => '?_route=momo_callback',
-        'webhook_url' => '?_route=momo_webhook'
+
+// Register gateway with PHPNuxBill
+_add_payment_gateway('momo_ssp', 'momo_config', 'momo_pay', 'momo_callback');
+
+// Add admin menu items
+_add_hook('admin.menu', function($menu) {
+    $menu[] = [
+        'name' => 'MTN MoMo Settings',
+        'icon' => 'fa-money',
+        'link' => '?_route=momo_admin'
     ];
+    return $menu;
+});
+
+// Register routes
+_add_hook('system.init', 'momo_handle_routes');
+
+// Installation check
+_register_hook('system.started', function() {
+    global $momo_db;
+    if (!isset($momo_db)) {
+        $momo_db = new MoMoDatabase();
+    }
+});
+
+// ============================================
+// PART 4: ROUTE HANDLING
+// ============================================
+function momo_handle_routes() {
+    $route = $_GET['_route'] ?? '';
+    
+    switch ($route) {
+        case 'momo_payment':
+            momo_payment_interface();
+            exit;
+            
+        case 'momo_callback':
+            momo_callback();
+            exit;
+            
+        case 'momo_admin':
+            momo_admin_settings();
+            exit;
+            
+        case 'momo_ajax':
+            momo_handle_ajax();
+            exit;
+    }
 }
 
-function momo_pay($gateway, $invoice, $customer) {
+function momo_handle_ajax() {
+    header('Content-Type: application/json');
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    $action = $input['action'] ?? '';
+    
+    switch ($action) {
+        case 'process_payment':
+            $phone = $input['phone'] ?? '';
+            $amount = $input['amount'] ?? 0;
+            $reference = $input['reference'] ?? '';
+            $invoice_id = $input['invoice_id'] ?? '';
+            
+            if (!momo_validate_phone($phone)) {
+                echo json_encode(['success' => false, 'message' => 'Invalid phone number. Use format: 912345678']);
+                exit;
+            }
+            
+            // Process payment (simplified for now)
+            echo json_encode([
+                'success' => true,
+                'message' => 'Payment initiated successfully',
+                'transaction_id' => 'TEST_' . time()
+            ]);
+            exit;
+            
+        default:
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            exit;
+    }
+}
+
+function momo_validate_phone($phone) {
+    // South Sudan phone format: +211 9XX XXX XXX
+    return preg_match('/^9[0-9]{8}$/', $phone);
+}
+
+?>function momo_pay($gateway, $invoice, $customer) {
     global $momo_config, $momo_db;
     
     try {
@@ -1349,9 +1422,6 @@ if (php_sapi_name() === 'cli') {
 
 // Route handler
 add_hook('system.init', 'momo_handleRoutes');
-
-// Add admin dashboard widget
-add_hook('admin.dashboard.widgets', 'momo_admin_widget');
 
 // Installation check
 register_hook('system.started', function() {
