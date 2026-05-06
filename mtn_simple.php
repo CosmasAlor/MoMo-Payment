@@ -42,14 +42,87 @@ function mtn_show_config()
     $ui->assign('enable_sms', $config['mtn_enable_sms'] ?? 'no');
     $ui->assign('country_code', '211');
     
-    // Try to display template with error handling
-    try {
-        $ui->display('mtn.tpl');
-    } catch (Exception $e) {
-        // Fallback to simple HTML if template fails
-        echo '<div class="alert alert-danger">Template error: ' . htmlspecialchars($e->getMessage()) . '</div>';
-        echo '<div class="alert alert-info">Please check that mtn.tpl exists in the ui/ directory.</div>';
-    }
+    // Simple HTML output to avoid template issues
+    echo '<div class="box">';
+    echo '<div class="box-header"><h3 class="box-title">MTN MoMo Payment Gateway Configuration</h3></div>';
+    echo '<div class="box-body">';
+    echo '<form method="post" action="' . U . 'paymentgateway/mtn_save">';
+    
+    echo '<div class="row">';
+    echo '<div class="col-md-6">';
+    echo '<div class="form-group">';
+    echo '<label>Environment</label>';
+    echo '<select name="mtn_environment" class="form-control">';
+    echo '<option value="sandbox"' . ($config['mtn_mode'] == 'sandbox' ? ' selected' : '') . '>Sandbox (Testing)</option>';
+    echo '<option value="live"' . ($config['mtn_mode'] == 'live' ? ' selected' : '') . '>Live (Production)</option>';
+    echo '</select>';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label>API User ID</label>';
+    echo '<input type="text" name="mtn_api_user_id" class="form-control" value="' . htmlspecialchars($config['mtn_api_user_id'] ?? '') . '" placeholder="UUID from MTN Developer Portal">';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label>Collection Subscription Key</label>';
+    echo '<input type="text" name="mtn_collection_subscription_key" class="form-control" value="' . htmlspecialchars($config['mtn_collection_subscription_key'] ?? '') . '" placeholder="Primary Key from Developer Portal">';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label>API Key</label>';
+    echo '<input type="text" name="mtn_api_key" class="form-control" value="' . htmlspecialchars($config['mtn_api_key'] ?? '') . '" placeholder="Generated API Key">';
+    echo '</div>';
+    echo '</div>';
+    
+    echo '<div class="col-md-6">';
+    echo '<div class="form-group">';
+    echo '<label>Callback URL</label>';
+    echo '<input type="text" name="mtn_callback_url" class="form-control" value="' . htmlspecialchars($config['mtn_callback_url'] ?? '') . '" placeholder="Webhook callback URL">';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label>Payment Timeout (seconds)</label>';
+    echo '<input type="number" name="mtn_payment_timeout" class="form-control" value="' . htmlspecialchars($config['mtn_payment_timeout'] ?? '60') . '" min="30" max="300">';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label>Webhook Secret</label>';
+    echo '<input type="password" name="mtn_webhook_secret" class="form-control" value="' . htmlspecialchars($config['mtn_webhook_secret'] ?? '') . '" placeholder="Secret for webhook verification">';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label><input type="checkbox" name="mtn_auto_credit" value="yes"' . ($config['mtn_auto_credit'] == 'yes' ? ' checked' : '') . '> Auto-Credit Internet</label>';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<label><input type="checkbox" name="mtn_enable_sms" value="yes"' . ($config['mtn_enable_sms'] == 'yes' ? ' checked' : '') . '> Enable SMS Receipts</label>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+    
+    echo '<div class="form-group">';
+    echo '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Settings</button>';
+    echo '</div>';
+    
+    echo '</form>';
+    echo '</div>';
+    echo '</div>';
+    
+    // Test information
+    echo '<div class="box">';
+    echo '<div class="box-header"><h3 class="box-title">Test Information</h3></div>';
+    echo '<div class="box-body">';
+    echo '<div class="alert alert-info">';
+    echo '<h4>Test Numbers (Sandbox Mode)</h4>';
+    echo '<ul>';
+    echo '<li><strong>912345678</strong> - Successful payment</li>';
+    echo '<li><strong>923456789</strong> - Failed payment</li>';
+    echo '<li><strong>934567890</strong> - Pending payment</li>';
+    echo '<li><strong>Test PIN:</strong> 12345</li>';
+    echo '</ul>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
 }
 
 function mtn_save_config()
@@ -177,110 +250,41 @@ function mtn_get_status($trx, $user)
     }
 }
 
-function mtn_get_server()
-{
-    global $_app_stage;
-    $config = ORM::for_table('tbl_appconfig')->where('setting', 'mtn_mode')->find_one();
-    $mode = $config ? $config['value'] : 'sandbox';
-    
-    if ($mode == 'live') {
-        return 'https://momodeveloper.mtn.com/';
-    } else {
-        return 'https://sandbox.momodeveloper.mtn.com/';
-    }
-}
-
-// Payment page handler
-function mtn_payment_page()
-{
-    global $config;
-    
+// Handle payment page
+if (isset($_GET['_route']) && $_GET['_route'] == 'paymentgateway/mtn_pay') {
     $invoice_id = $_GET['invoice'] ?? '';
     $amount = $_GET['amount'] ?? '';
     
     if (empty($invoice_id) || empty($amount)) {
         echo '<div class="alert alert-danger">Missing invoice or amount parameter</div>';
-        return;
+        exit;
     }
     
     $reference = 'MOMO' . time() . rand(1000, 9999);
     
-    ?>
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>MTN MoMo Payment</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    </head>
-    <body>
-        <div class="container" style="margin-top: 50px;">
-            <div class="row">
-                <div class="col-md-6 col-md-offset-3">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">
-                                <i class="fa fa-mobile"></i> MTN MoMo Payment
-                            </h3>
-                        </div>
-                        <div class="panel-body">
-                            <form method="post" action="<?php echo U; ?>paymentgateway/mtn_callback">
-                                <div class="form-group">
-                                    <label>Amount</label>
-                                    <div class="form-control-static">
-                                        <h3 style="color: #28a745;">£<?php echo number_format($amount, 2); ?></h3>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Phone Number (+211)</label>
-                                    <input type="tel" name="phone" class="form-control" placeholder="9XXXXXXXX" required pattern="9[0-9]{8}">
-                                    <small class="text-muted">Format: 9XXXXXXXX (9 digits starting with 9)</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Invoice ID</label>
-                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($invoice_id); ?>" readonly>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Reference</label>
-                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($reference); ?>" readonly>
-                                </div>
-                                
-                                <input type="hidden" name="invoice" value="<?php echo htmlspecialchars($invoice_id); ?>">
-                                <input type="hidden" name="amount" value="<?php echo htmlspecialchars($amount); ?>">
-                                <input type="hidden" name="reference" value="<?php echo htmlspecialchars($reference); ?>">
-                                <input type="hidden" name="transaction_id" value="TEST_<?php echo time(); ?>">
-                                
-                                <div class="form-group">
-                                    <button type="submit" name="status" value="success" class="btn btn-primary btn-block">
-                                        <i class="fa fa-lock"></i> Pay Now
-                                    </button>
-                                </div>
-                            </form>
-                            
-                            <div class="alert alert-info">
-                                <h4>Test Information</h4>
-                                <ul>
-                                    <li><strong>Test Numbers:</strong> 912345678 (success), 923456789 (failed)</li>
-                                    <li><strong>Test PIN:</strong> 12345</li>
-                                    <li><strong>Environment:</strong> <?php echo ucfirst($config['mtn_mode'] ?? 'sandbox'); ?></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-    <?php
-}
-
-// Handle direct payment page access
-if (isset($_GET['_route']) && $_GET['_route'] == 'paymentgateway/mtn_pay') {
-    mtn_payment_page();
+    echo '<div class="container" style="margin-top: 50px;">';
+    echo '<div class="row">';
+    echo '<div class="col-md-6 col-md-offset-3">';
+    echo '<div class="panel panel-primary">';
+    echo '<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-mobile"></i> MTN MoMo Payment</h3></div>';
+    echo '<div class="panel-body">';
+    echo '<form method="post" action="' . U . 'paymentgateway/mtn_callback">';
+    echo '<div class="form-group"><label>Amount</label><div class="form-control-static"><h3 style="color: #28a745;">£' . number_format($amount, 2) . '</h3></div></div>';
+    echo '<div class="form-group"><label>Phone Number (+211)</label><input type="tel" name="phone" class="form-control" placeholder="9XXXXXXXX" required pattern="9[0-9]{8]"><small class="text-muted">Format: 9XXXXXXXX (9 digits starting with 9)</small></div>';
+    echo '<div class="form-group"><label>Invoice ID</label><input type="text" class="form-control" value="' . htmlspecialchars($invoice_id) . '" readonly></div>';
+    echo '<div class="form-group"><label>Reference</label><input type="text" class="form-control" value="' . htmlspecialchars($reference) . '" readonly></div>';
+    echo '<input type="hidden" name="invoice" value="' . htmlspecialchars($invoice_id) . '">';
+    echo '<input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">';
+    echo '<input type="hidden" name="reference" value="' . htmlspecialchars($reference) . '">';
+    echo '<input type="hidden" name="transaction_id" value="TEST_' . time() . '">';
+    echo '<div class="form-group"><button type="submit" name="status" value="success" class="btn btn-primary btn-block"><i class="fa fa-lock"></i> Pay Now</button></div>';
+    echo '</form>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+    exit();
 }
 
 // Handle callback
