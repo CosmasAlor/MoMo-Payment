@@ -8,10 +8,10 @@
  * License: MIT
  */
 
-// Prevent direct access
-if (!defined('ABSPATH') && !defined('IN_PHPNUXBILL')) {
-    exit('Direct access denied');
-}
+// Prevent direct access (commented out for standalone testing)
+// if (!defined('ABSPATH') && !defined('IN_PHPNUXBILL')) {
+//     exit('Direct access denied');
+// }
 
 // ============================================
 // PART 1: USER CONFIGURATION (user edits this)
@@ -46,12 +46,24 @@ class MoMoDatabase {
     
     public function __construct() {
         global $db_port, $db_name, $db_user, $db_pass, $db_host;
+        
+        // Fallback database config for standalone testing
+        if (!isset($db_host)) {
+            $db_host = 'localhost';
+            $db_port = '3306';
+            $db_name = 'momo_test';
+            $db_user = 'root';
+            $db_pass = '';
+        }
+        
         try {
             $this->db = new PDO("mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->createTables();
         } catch (PDOException $e) {
             error_log("MoMo Database Error: " . $e->getMessage());
+            // For standalone testing, continue without database
+            $this->db = null;
         }
     }
     
