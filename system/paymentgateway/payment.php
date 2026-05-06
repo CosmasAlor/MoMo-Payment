@@ -8,8 +8,8 @@
  * Version: 2.0
  * Author: PHPNuxBill Community
  * 
- * File: system/paymentgateway/mtnmomo.php
- * Template: system/paymentgateway/ui/mtnmomo.tpl
+ * File: system/paymentgateway/payment.php
+ * Template: system/paymentgateway/ui/payment.tpl
  * 
  * Compatible with MTN MoMo Collection API v1.0
  * https://momodeveloper.mtn.com/API-collections
@@ -19,7 +19,7 @@
  * Validate that the gateway configuration is complete.
  * Called by PHPNuxBill before allowing transactions.
  */
-function mtnmomo_validate_config()
+function payment_validate_config()
 {
     global $config;
     if (empty($config['mtnmomo_api_user_id']) || empty($config['mtnmomo_collection_subscription_key'])) {
@@ -31,17 +31,27 @@ function mtnmomo_validate_config()
 /**
  * Display the gateway configuration form in the admin panel.
  */
-function mtnmomo_show_config()
+function payment_show_config()
 {
-    global $ui;
+    global $ui, $config;
     $ui->assign('_title', 'MTN MoMo - Payment Gateway');
-    $ui->display('mtnmomo.tpl');
+    $ui->assign('env', $config['mtnmomo_environment'] ?? 'sandbox');
+    $ui->assign('api_user_id', $config['mtnmomo_api_user_id'] ?? '');
+    $ui->assign('collection_subscription_key', $config['mtnmomo_collection_subscription_key'] ?? '');
+    $ui->assign('api_key', $config['mtnmomo_api_key'] ?? '');
+    $ui->assign('callback_url', $config['mtnmomo_callback_url'] ?? '');
+    $ui->assign('currency', $config['mtnmomo_currency'] ?? 'SSP');
+    $ui->assign('country_code', $config['mtnmomo_country_code'] ?? '211');
+    $ui->assign('auto_credit', $config['mtnmomo_auto_credit'] ?? 'yes');
+    $ui->assign('payment_timeout', $config['mtnmomo_payment_timeout'] ?? '60');
+    $ui->assign('webhook_secret', $config['mtnmomo_webhook_secret'] ?? '');
+    $ui->display('payment.tpl');
 }
 
 /**
  * Save the gateway configuration from admin panel form.
  */
-function mtnmomo_save_config()
+function payment_save_config()
 {
     global $admin, $_L;
 
@@ -75,7 +85,7 @@ function mtnmomo_save_config()
     }
 
     _log('[' . $admin['username'] . ']: MTN MoMo ' . $_L['Settings_Saved_Successfully'], 'Admin', $admin['id']);
-    r2(U . 'paymentgateway/mtnmomo', 's', $_L['Settings_Saved_Successfully']);
+    r2(U . 'paymentgateway/payment', 's', $_L['Settings_Saved_Successfully']);
 }
 
 /**
@@ -88,7 +98,7 @@ function mtnmomo_save_config()
  * @param array|object $trx  Transaction data (id, plan_name, price, routers, plan_id, etc.)
  * @param array|object $user User data (id, username, fullname, phonenumber, email, etc.)
  */
-function mtnmomo_create_transaction($trx, $user)
+function payment_create_transaction($trx, $user)
 {
     global $config;
 
@@ -102,10 +112,10 @@ function mtnmomo_create_transaction($trx, $user)
     $timeout = intval($config['mtnmomo_payment_timeout'] ?: 60);
 
     // Determine the API endpoint
-    $base_url = mtnmomo_get_server();
+    $base_url = payment_get_server();
 
     // Generate a unique reference ID (UUID v4) for this transaction
-    $reference_id = mtnmomo_uuid_v4();
+    $reference_id = payment_uuid_v4();
 
     // Prepare the phone number: strip +, leading 0, or existing country code, then prepend country code
     $phone = $user['phonenumber'];
@@ -117,7 +127,7 @@ function mtnmomo_create_transaction($trx, $user)
     // =========================================
     // Step 1: Get an OAuth2 access token
     // =========================================
-    $token = mtnmomo_get_access_token($base_url, $api_user_id, $api_key, $subscription_key);
+    $token = payment_get_access_token($base_url, $api_user_id, $api_key, $subscription_key);
     if (!$token) {
         Message::sendTelegram("MTN MoMo: Failed to obtain access token\nTransaction: " . $trx['id']);
         r2(U . 'order/package', 'e', Lang::T("MTN MoMo: Unable to authenticate. Please try again later."));
@@ -202,7 +212,7 @@ function mtnmomo_create_transaction($trx, $user)
  * Handle payment notification callback from MTN MoMo.
  * Called when MTN sends a webhook or when user returns from payment.
  */
-function mtnmomo_payment_notification()
+function payment_payment_notification()
 {
     global $config;
 
@@ -236,7 +246,7 @@ function mtnmomo_payment_notification()
 
         // Look up the pending payment by externalId (which is our trx id)
         $d = ORM::for_table('tbl_payment_gateway')
-            ->where('gateway', 'mtnmomo')
+            ->where('gateway', 'payment')
             ->where('status', 1)
             ->find_one();
 
@@ -290,7 +300,7 @@ function mtnmomo_payment_notification()
  * @param array|object $trx  Transaction record from tbl_payment_gateway
  * @param array|object $user User record from tbl_customers
  */
-function mtnmomo_get_status($trx, $user)
+function payment_get_status($trx, $user)
 {
     global $config;
 
@@ -300,14 +310,14 @@ function mtnmomo_get_status($trx, $user)
         return;
     }
 
-    $base_url = mtnmomo_get_server();
+    $base_url = payment_get_server();
     $api_user_id = $config['mtnmomo_api_user_id'];
     $api_key = $config['mtnmomo_api_key'];
     $subscription_key = $config['mtnmomo_collection_subscription_key'];
     $environment = $config['mtnmomo_environment'] ?: 'sandbox';
 
     // Get a fresh access token
-    $token = mtnmomo_get_access_token($base_url, $api_user_id, $api_key, $subscription_key);
+    $token = payment_get_access_token($base_url, $api_user_id, $api_key, $subscription_key);
     if (!$token) {
         r2(U . "order/view/" . $trx['id'], 'w', Lang::T("Unable to check payment status. Please try again."));
         return;
@@ -356,20 +366,20 @@ function mtnmomo_get_status($trx, $user)
     } elseif ($trx['status'] == 2) {
         r2(U . "order/view/" . $trx['id'], 'd', Lang::T("Transaction has been paid.."));
     } else {
-        Message::sendTelegram("mtnmomo_get_status: unknown result\n\n" . json_encode($result, JSON_PRETTY_PRINT));
+        Message::sendTelegram("payment_get_status: unknown result\n\n" . json_encode($result, JSON_PRETTY_PRINT));
         r2(U . "order/view/" . $trx['id'], 'd', Lang::T("Unknown Command."));
     }
 }
 
 
 // ============================================
-// HELPER FUNCTIONS (all prefixed with mtnmomo_)
+// HELPER FUNCTIONS (all prefixed with payment_)
 // ============================================
 
 /**
  * Get the MTN MoMo API base URL based on environment.
  */
-function mtnmomo_get_server()
+function payment_get_server()
 {
     global $config;
     $environment = $config['mtnmomo_environment'] ?? 'sandbox';
@@ -387,7 +397,7 @@ function mtnmomo_get_server()
  * Authorization: Basic base64(api_user_id:api_key)
  * Ocp-Apim-Subscription-Key: {subscription_key}
  */
-function mtnmomo_get_access_token($base_url, $api_user_id, $api_key, $subscription_key)
+function payment_get_access_token($base_url, $api_user_id, $api_key, $subscription_key)
 {
     $ch = curl_init($base_url . 'collection/token/');
     curl_setopt($ch, CURLOPT_POST, true);
@@ -415,7 +425,7 @@ function mtnmomo_get_access_token($base_url, $api_user_id, $api_key, $subscripti
 /**
  * Generate a UUID v4 for MTN MoMo X-Reference-Id header.
  */
-function mtnmomo_uuid_v4()
+function payment_uuid_v4()
 {
     if (function_exists('com_create_guid')) {
         return strtolower(trim(com_create_guid(), '{}'));

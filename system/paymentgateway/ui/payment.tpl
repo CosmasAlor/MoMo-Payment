@@ -7,7 +7,7 @@
                 <div class="panel-title">MTN Mobile Money (South Sudan) - Configuration</div>
             </div>
             <div class="panel-body">
-                <form class="form-horizontal" method="post" role="form" action="{$_url}paymentgateway/mtnmomo">
+                <form class="form-horizontal" method="post" role="form" action="{$_url}paymentgateway/payment">
 
                     <div class="panel panel-default">
                         <div class="panel-heading">
