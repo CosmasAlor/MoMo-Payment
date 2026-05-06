@@ -493,34 +493,44 @@ function mtn_callback() {
 }
 
 // ============================================
-// ROUTE HANDLING - EXACT CODE AS REQUESTED
+// ROUTE HANDLING - FLEXIBLE BASE ROUTE
 // ============================================
 $route = $_GET["_route"] ?? "";
 
-// Debug: Show current route (remove in production)
+// Extract the action from any base route
+$action = '';
+if (strpos($route, '/') !== false) {
+    $parts = explode('/', $route);
+    $action = end($parts);
+} else {
+    $action = $route;
+}
+
+// Debug: Show current route and action (remove in production)
 if (empty($route)) {
     echo '<div class="alert alert-info">Debug: No route parameter found. Current URL: ' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</div>';
     echo '<div class="alert alert-info">Debug: GET parameters: ' . htmlspecialchars(print_r($_GET, true)) . '</div>';
 }
 
-if ($route == "paymentgateway/mtn_config") {
+if ($action == "mtn_config") {
     mtn_admin_page();
     exit;
 }
 
-if ($route == "paymentgateway/mtn_pay") {
+if ($action == "mtn_pay") {
     mtn_payment_page();
     exit;
 }
 
-if ($route == "paymentgateway/mtn_callback") {
+if ($action == "mtn_callback") {
     mtn_callback();
     exit;
 }
 
 // If no route matched, show error with debug info
-echo '<div class="alert alert-warning">Invalid route. Use ?_route=paymentgateway/mtn_config, ?_route=paymentgateway/mtn_pay, or ?_route=paymentgateway/mtn_callback</div>';
+echo '<div class="alert alert-warning">Invalid route. Use mtn_config, mtn_pay, or mtn_callback as action</div>';
 echo '<div class="alert alert-info">Debug: Current route detected: "' . htmlspecialchars($route) . '"</div>';
+echo '<div class="alert alert-info">Debug: Action extracted: "' . htmlspecialchars($action) . '"</div>';
 echo '<div class="alert alert-info">Debug: Full URL: ' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</div>';
 
 ?>
