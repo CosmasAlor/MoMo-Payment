@@ -12,6 +12,7 @@
 // ============================================
 // SECURITY - Block direct access
 // ============================================
+// Allow access with ?_route= parameter
 if (basename($_SERVER["PHP_SELF"]) == basename(__FILE__) && !isset($_GET["_route"])) {
     exit("Direct access denied");
 }
@@ -496,6 +497,12 @@ function mtn_callback() {
 // ============================================
 $route = $_GET["_route"] ?? "";
 
+// Debug: Show current route (remove in production)
+if (empty($route)) {
+    echo '<div class="alert alert-info">Debug: No route parameter found. Current URL: ' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</div>';
+    echo '<div class="alert alert-info">Debug: GET parameters: ' . htmlspecialchars(print_r($_GET, true)) . '</div>';
+}
+
 if ($route == "paymentgateway/mtn_config") {
     mtn_admin_page();
     exit;
@@ -511,7 +518,9 @@ if ($route == "paymentgateway/mtn_callback") {
     exit;
 }
 
-// If no route matched, show error
+// If no route matched, show error with debug info
 echo '<div class="alert alert-warning">Invalid route. Use ?_route=paymentgateway/mtn_config, ?_route=paymentgateway/mtn_pay, or ?_route=paymentgateway/mtn_callback</div>';
+echo '<div class="alert alert-info">Debug: Current route detected: "' . htmlspecialchars($route) . '"</div>';
+echo '<div class="alert alert-info">Debug: Full URL: ' . htmlspecialchars($_SERVER['REQUEST_URI']) . '</div>';
 
 ?>
