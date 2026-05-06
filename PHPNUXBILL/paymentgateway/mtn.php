@@ -17,7 +17,7 @@ if (!defined('IN_PHPNUXBILL')) {
 // ============================================
 // GATEWAY CONFIGURATION
 // ============================================
-function mtnmomo_config() {
+function paymentgateway_mtn_config() {
     return [
         'name' => 'MTN MoMo (SSP)',
         'version' => '1.0',
@@ -145,9 +145,9 @@ $momo_db = new MoMoDatabase();
 // ============================================
 // GATEWAY VALIDATION
 // ============================================
-function mtnmomo_validate_config() {
+function paymentgateway_mtn_validate_config() {
     global $config;
-    if (empty($config['mtnmomo_api_user_id']) || empty($config['mtnmomo_collection_subscription_key'])) {
+    if (empty($config['mtn_api_user_id']) || empty($config['mtn_collection_subscription_key'])) {
         Message::sendTelegram("MTN MoMo payment gateway not configured.\nPlease set API User ID and Collection Subscription Key.");
         r2(U . 'order/package', 'w', Lang::T("Admin has not yet setup MTN MoMo payment gateway, please tell admin"));
     }
@@ -156,26 +156,26 @@ function mtnmomo_validate_config() {
 // ============================================
 // GATEWAY CONFIGURATION FORM
 // ============================================
-function mtnmomo_show_config() {
+function paymentgateway_mtn_show_config() {
     global $ui, $config;
     $ui->assign('_title', 'MTN MoMo - Payment Gateway');
-    $ui->assign('env', $config['mtnmomo_environment'] ?? 'sandbox');
-    $ui->assign('api_user_id', $config['mtnmomo_api_user_id'] ?? '');
-    $ui->assign('collection_subscription_key', $config['mtnmomo_collection_subscription_key'] ?? '');
-    $ui->assign('api_key', $config['mtnmomo_api_key'] ?? '');
-    $ui->assign('callback_url', $config['mtnmomo_callback_url'] ?? '');
-    $ui->assign('currency', $config['mtnmomo_currency'] ?? 'SSP');
-    $ui->assign('country_code', $config['mtnmomo_country_code'] ?? '211');
-    $ui->assign('auto_credit', $config['mtnmomo_auto_credit'] ?? 'yes');
-    $ui->assign('payment_timeout', $config['mtnmomo_payment_timeout'] ?? '60');
-    $ui->assign('webhook_secret', $config['mtnmomo_webhook_secret'] ?? '');
-    $ui->display('mtnmomo.tpl');
+    $ui->assign('env', $config['mtn_environment'] ?? 'sandbox');
+    $ui->assign('api_user_id', $config['mtn_api_user_id'] ?? '');
+    $ui->assign('collection_subscription_key', $config['mtn_collection_subscription_key'] ?? '');
+    $ui->assign('api_key', $config['mtn_api_key'] ?? '');
+    $ui->assign('callback_url', $config['mtn_callback_url'] ?? '');
+    $ui->assign('currency', $config['mtn_currency'] ?? 'SSP');
+    $ui->assign('country_code', $config['mtn_country_code'] ?? '211');
+    $ui->assign('auto_credit', $config['mtn_auto_credit'] ?? 'yes');
+    $ui->assign('payment_timeout', $config['mtn_payment_timeout'] ?? '60');
+    $ui->assign('webhook_secret', $config['mtn_webhook_secret'] ?? '');
+    $ui->display('mtn.tpl');
 }
 
 // ============================================
 // PAYMENT PROCESSING
 // ============================================
-function mtnmomo_pay($gateway, $invoice, $customer) {
+function paymentgateway_mtn_pay($gateway, $invoice, $customer) {
     global $momo_db, $config;
     
     try {
@@ -208,7 +208,7 @@ function mtnmomo_pay($gateway, $invoice, $customer) {
 // ============================================
 // PAYMENT CALLBACK
 // ============================================
-function mtnmomo_callback() {
+function paymentgateway_mtn_callback() {
     global $momo_db;
     
     $invoice_id = $_POST['invoice_id'] ?? $_GET['invoice_id'] ?? '';
@@ -280,7 +280,7 @@ function updateAnalytics($invoice_id) {
     }
 }
 
-function mtnmomo_validatePhone($phone) {
+function mtn_validatePhone($phone) {
     // Remove country code if present
     $phone = preg_replace('/^\+211/', '', $phone);
     $phone = preg_replace('/^\+/', '', $phone);
@@ -292,14 +292,14 @@ function mtnmomo_validatePhone($phone) {
 // ============================================
 // ADMIN ROUTES
 // ============================================
-function mtnmomo_admin_routes() {
+function mtn_admin_routes() {
     // Handle admin routes for transactions, export, etc.
-    if (isset($_GET['route']) && $_GET['route'] === 'mtnmomo_transactions') {
-        mtnmomo_admin_transactions();
+    if (isset($_GET['route']) && $_GET['route'] === 'mtn_transactions') {
+        mtn_admin_transactions();
     }
 }
 
-function mtnmomo_admin_transactions() {
+function mtn_admin_transactions() {
     global $momo_db;
     
     try {
@@ -344,5 +344,17 @@ function mtnmomo_admin_transactions() {
         echo '<div class="alert alert-danger">Error loading transactions: ' . htmlspecialchars($e->getMessage()) . '</div>';
     }
 }
+
+// ============================================
+// PHPNUXBILL GATEWAY DISCOVERY
+// ============================================
+return [
+    'name' => 'MTN MoMo (SSP)',
+    'version' => '1.0',
+    'currency' => 'SSP',
+    'config_function' => 'paymentgateway_mtn_config',
+    'payment_function' => 'paymentgateway_mtn_pay',
+    'callback_function' => 'paymentgateway_mtn_callback'
+];
 
 ?>
