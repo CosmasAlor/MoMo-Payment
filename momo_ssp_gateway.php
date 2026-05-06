@@ -8,10 +8,13 @@
  * License: MIT
  */
 
-// Prevent direct access (commented out for standalone testing)
-// if (!defined('ABSPATH') && !defined('IN_PHPNUXBILL')) {
-//     exit('Direct access denied');
-// }
+// Smart security check - allows routing but blocks direct file access
+$route = $_GET['_route'] ?? '';
+$allowed_direct_routes = ['momo_payment', 'momo_callback', 'momo_webhook', 'momo_admin', 'MoMo SS'];
+
+if (basename($_SERVER['PHP_SELF']) == basename(__FILE__) && !in_array($route, $allowed_direct_routes)) {
+    exit('Direct access denied');
+}
 
 // ============================================
 // PART 1: USER CONFIGURATION (user edits this)
@@ -180,6 +183,10 @@ function momo_handle_routes() {
             momo_payment_interface();
             exit;
             
+        case 'MoMo SS':
+            momo_payment_interface();
+            exit;
+            
         case 'momo_callback':
             momo_callback();
             exit;
@@ -231,7 +238,7 @@ function momo_validate_phone($phone) {
     return preg_match('/^9[0-9]{8}$/', $phone);
 }
 
-?>function momo_pay($gateway, $invoice, $customer) {
+function momo_pay($gateway, $invoice, $customer) {
     global $momo_config, $momo_db;
     
     try {
@@ -1180,6 +1187,10 @@ function momo_handleRoutes() {
             momo_payment_interface();
             exit;
             
+        case 'MoMo SS':
+            momo_payment_interface();
+            exit;
+            
         case 'momo_callback':
             momo_callback();
             exit;
@@ -1432,7 +1443,12 @@ if (php_sapi_name() === 'cli') {
     }
 }
 
-// Route handler
+// Handle routing for standalone mode
+if (!defined('IN_PHPNUXBILL') && !defined('ABSPATH') && isset($_GET['_route'])) {
+    momo_handleRoutes();
+}
+
+// Route handler (for PHPNuxBill integration)
 add_hook('system.init', 'momo_handleRoutes');
 
 // Installation check

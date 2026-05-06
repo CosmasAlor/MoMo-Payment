@@ -6,8 +6,11 @@
  * Country: South Sudan (+211)
  */
 
-// Prevent direct access
-if (!defined('IN_PHPNUXBILL')) {
+// Smart security check - allows routing but blocks direct file access
+$route = $_GET['_route'] ?? '';
+$allowed_direct_routes = ['momo_payment', 'momo_callback', 'momo_webhook', 'momo_admin', 'MoMo SS'];
+
+if (basename($_SERVER['PHP_SELF']) == basename(__FILE__) && !in_array($route, $allowed_direct_routes)) {
     exit('Direct access denied');
 }
 
@@ -61,12 +64,24 @@ class MoMoDatabase {
     
     public function __construct() {
         global $db_port, $db_name, $db_user, $db_pass, $db_host;
+        
+        // Fallback database config for standalone testing
+        if (!isset($db_host)) {
+            $db_host = 'localhost';
+            $db_port = '3306';
+            $db_name = 'momo_test';
+            $db_user = 'root';
+            $db_pass = '';
+        }
+        
         try {
             $this->db = new PDO("mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->createTables();
         } catch (PDOException $e) {
             error_log("MoMo Database Error: " . $e->getMessage());
+            // For standalone testing, continue without database
+            $this->db = null;
         }
     }
     
@@ -881,6 +896,10 @@ function momo_handleRoutes() {
             momo_payment_interface();
             exit;
             
+        case 'MoMo SS':
+            momo_payment_interface();
+            exit;
+            
         case 'momo_callback':
             momo_callback();
             exit;
@@ -1271,6 +1290,11 @@ if (php_sapi_name() === 'cli') {
         echo "Installation complete!\n";
         exit;
     }
+}
+
+// Handle routing for standalone mode
+if (!defined('IN_PHPNUXBILL') && isset($_GET['_route'])) {
+    momo_handleRoutes();
 }
 
 ?>
